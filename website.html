@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aim Sensitivity Finder</title>
+    <title>eDPI Sensitivity Finder Game</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
         
@@ -31,7 +31,7 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1100px; /* Slightly wider */
             gap: 20px;
         }
 
@@ -63,17 +63,22 @@
             box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
             cursor: none; /* Hide default cursor */
             background-color: #0d0d0d;
-            touch-action: none; /* Prevent default touch scrolling/gestures */
+            touch-action: none; 
+            width: 100%; /* Make canvas truly responsive */
+            max-width: 800px;
+            aspect-ratio: 7/5; /* Maintain aspect ratio */
         }
-
+        
+        /* Reticle Styles */
         .reticle {
             position: absolute;
             width: 20px;
             height: 20px;
-            pointer-events: none; /* Allows clicks to pass through */
+            pointer-events: none;
             transform: translate(-50%, -50%);
             transition: opacity 0.1s;
             opacity: 1;
+            z-index: 50; /* Ensure reticle is above canvas for accurate positioning */
         }
 
         .reticle-center {
@@ -92,29 +97,17 @@
             background-color: var(--accent-color);
         }
 
-        .reticle-h1, .reticle-h2 {
-            width: 8px;
-            height: 2px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
+        .reticle-h1, .reticle-h2 { width: 8px; height: 2px; top: 50%; transform: translateY(-50%); }
         .reticle-h1 { left: 0; }
         .reticle-h2 { right: 0; }
-
-        .reticle-v1, .reticle-v2 {
-            width: 2px;
-            height: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
+        .reticle-v1, .reticle-v2 { width: 2px; height: 8px; left: 50%; transform: translateX(-50%); }
         .reticle-v1 { top: 0; }
         .reticle-v2 { bottom: 0; }
         
         /* Sidebar/Info Panel */
         .info-panel {
-            width: 280px;
-            min-width: 280px;
+            width: 300px;
+            min-width: 300px;
             background-color: var(--card-bg);
             padding: 20px;
             border-radius: 8px;
@@ -130,6 +123,33 @@
             border-bottom: 2px solid var(--primary-color);
             padding-bottom: 5px;
         }
+        
+        .settings-input input {
+            width: calc(100% - 10px);
+            padding: 8px 5px;
+            margin-bottom: 15px;
+            background-color: #333;
+            border: 1px solid var(--primary-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+        }
+        
+        .settings-input label {
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+        
+        .settings-input span.note {
+            display: block;
+            font-size: 0.75rem;
+            color: #777;
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
 
         .stat-item {
             display: flex;
@@ -139,18 +159,9 @@
             border-bottom: 1px dashed #333;
         }
 
-        .stat-label {
-            color: var(--text-color);
-        }
-
-        .stat-value {
-            color: var(--accent-color);
-            font-weight: 700;
-        }
-
-        .stat-item:last-child {
-            border-bottom: none;
-        }
+        .stat-label { color: var(--text-color); }
+        .stat-value { color: var(--accent-color); font-weight: 700; }
+        .stat-item:last-child { border-bottom: none; }
 
         .controls button {
             width: 100%;
@@ -167,14 +178,8 @@
             box-shadow: 0 4px 0 #b32a00;
         }
 
-        .controls button:hover {
-            background-color: #ff5233;
-        }
-
-        .controls button:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #b32a00;
-        }
+        .controls button:hover { background-color: #ff5233; }
+        .controls button:active { transform: translateY(2px); box-shadow: 0 2px 0 #b32a00; }
 
         /* Results Modal */
         #resultsModal {
@@ -183,33 +188,55 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.9);
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 100;
+            z-index: 1000;
         }
 
         .modal-content {
             background-color: var(--card-bg);
             padding: 30px;
             border-radius: 10px;
-            max-width: 400px;
+            max-width: 450px;
+            width: 90%;
             text-align: center;
             border: 2px solid var(--primary-color);
-            box-shadow: 0 0 25px rgba(0, 230, 118, 0.7);
+            box-shadow: 0 0 35px rgba(0, 230, 118, 0.9);
         }
 
         .modal-content h3 {
             color: var(--primary-color);
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             margin-top: 0;
         }
         
         #suggestionText {
-            font-size: 1.1rem;
+            font-size: 1rem;
             line-height: 1.6;
             margin: 20px 0;
+            padding: 10px;
+            border-left: 3px solid var(--accent-color);
+            text-align: left;
+        }
+        
+        .recommendation-box {
+            background-color: #0d0d0d;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .recommendation-box p {
+            font-size: 1.1rem;
+            margin: 5px 0;
+        }
+
+        .recommendation-box strong {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-left: 5px;
         }
 
         .modal-content button {
@@ -222,24 +249,23 @@
             font-weight: 700;
             cursor: pointer;
             transition: background-color 0.2s;
+            margin-top: 20px;
         }
         
-        .modal-content button:hover {
-            background-color: #38ff99;
-        }
-
-        .hidden {
-            display: none;
-        }
+        .modal-content button:hover { background-color: #38ff99; }
+        .hidden { display: none; }
 
         /* Responsive Layout */
-        @media (max-width: 768px) {
+        @media (max-width: 950px) {
             .main-content {
                 flex-direction: column;
             }
             .info-panel {
                 width: 100%;
                 min-width: auto;
+            }
+            .game-area {
+                width: 100%;
             }
             .container {
                 padding: 10px;
@@ -252,7 +278,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Sensitivity Finder: The Flick Test</h1>
+        <h1>Aim Precision Test: eDPI Calibration</h1>
         <div class="main-content">
             <!-- Game Canvas Area -->
             <div class="game-area">
@@ -269,7 +295,20 @@
 
             <!-- Info and Controls Panel -->
             <div class="info-panel">
-                <h2>Game Stats</h2>
+                <h2>1. Current Settings</h2>
+                <div class="settings-input">
+                    <label for="currentDPI">Mouse DPI (e.g., 800)</label>
+                    <input type="number" id="currentDPI" value="800" min="100" max="32000">
+                    <label for="currentSens">In-Game Sensitivity (e.g., 0.5)</label>
+                    <input type="number" id="currentSens" value="0.5" step="0.01" min="0.01" max="10.0">
+                    <span class="note">Requires a single-unit sensitivity value (like Valorant/CSGO).</span>
+                </div>
+                <div class="stat-item" style="border-top: 1px solid #333; padding-top: 10px;">
+                    <span class="stat-label">Current eDPI</span>
+                    <span id="currentEDPI" class="stat-value">400</span>
+                </div>
+
+                <h2 style="margin-top: 20px;">2. Test Stats</h2>
                 <div class="stats">
                     <div class="stat-item">
                         <span class="stat-label">Shots Taken</span>
@@ -277,25 +316,8 @@
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Shots Left</span>
-                        <span id="shotsLeft" class="stat-value">10</span>
+                        <span id="shotsLeft" class="stat-value">15</span>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Total Time (s)</span>
-                        <span id="totalTime" class="stat-value">0.00</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Avg Reaction (ms)</span>
-                        <span id="avgReaction" class="stat-value">N/A</span>
-                    </div>
-                </div>
-
-                <div class="controls">
-                    <p style="text-align: center; font-size: 0.9rem; margin-top: 15px;">Flick from center to target and click.</p>
-                    <button id="startButton">START TEST (10 Shots)</button>
-                </div>
-                
-                <h2 style="margin-top: 30px;">Analysis Data</h2>
-                <div class="stats">
                     <div class="stat-item">
                         <span class="stat-label">Avg Overshoot (px)</span>
                         <span id="avgOvershoot" class="stat-value">0.00</span>
@@ -304,10 +326,11 @@
                         <span class="stat-label">Avg Undershoot (px)</span>
                         <span id="avgUndershoot" class="stat-value">0.00</span>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Sensitivity Suggestion</span>
-                        <span id="suggestion" class="stat-value" style="color: var(--text-color); font-weight: 400;">(Run Test First)</span>
-                    </div>
+                </div>
+
+                <div class="controls">
+                    <p style="text-align: center; font-size: 0.9rem; margin-top: 15px;">Flick from center crosshair to the target and click.</p>
+                    <button id="startButton">START CALIBRATION (15 Shots)</button>
                 </div>
             </div>
         </div>
@@ -316,19 +339,24 @@
     <!-- Results Modal -->
     <div id="resultsModal" class="hidden">
         <div class="modal-content">
-            <h3>Test Complete!</h3>
+            <h3>Calibration Complete!</h3>
             <p id="modalStats"></p>
-            <p id="suggestionText"></p>
-            <button onclick="closeModal()">Try Again</button>
+            
+            <div class="recommendation-box">
+                <h4>Recommended Settings</h4>
+                <p>Target eDPI: <strong id="recommendedEDPI">N/A</strong></p>
+                <p>New In-Game Sens (at your DPI): <strong id="recommendedSens">N/A</strong></p>
+            </div>
+            
+            <div id="suggestionText"></div>
+            
+            <button onclick="closeModal()">Run Test Again</button>
         </div>
     </div>
 
     <script>
-        // --- Firebase/Auth/Firestore setup boilerplate ---
-        // Note: Firestore is not used for this single-player game, but the variables are included as per standard instruction.
+        // --- Firebase/Auth/Firestore setup boilerplate (not used for game state) ---
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        // const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : undefined;
         // ---------------------------------------------------
 
         // Canvas and Context
@@ -336,31 +364,39 @@
         const ctx = canvas.getContext('2d');
         const reticle = document.getElementById('reticle');
         
-        // Game State
-        const MAX_SHOTS = 10;
+        // Game Constants
+        const MAX_SHOTS = 15; // Increased shots for better accuracy
         const TARGET_RADIUS = 20;
-        const FLICK_DISTANCE = 200; // Fixed distance from center to target
+        const FLICK_DISTANCE = 200; // Fixed distance from center to target (in pixels)
+        const PIXELS_PER_CM = 38; // Estimated screen DPI for error translation (doesn't affect eDPI calculation, but helps interpret error)
+        
+        // Settings Variables
+        let currentDPI = 800;
+        let currentSens = 0.5;
+        let currentEDPI = 400; // Calculated: DPI * Sens
+
+        // Game State
         let isGameRunning = false;
         let shotsTaken = 0;
         let target = null;
         let startTime = 0;
-        let reactionTimes = [];
-        let overshootErrors = []; // Errors that are past the target center
-        let undershootErrors = []; // Errors that are short of the target center
+        let overshootErrors = []; 
+        let undershootErrors = []; 
         let gameLoopInterval = null;
 
         // UI Elements
+        const currentDPIEl = document.getElementById('currentDPI');
+        const currentSensEl = document.getElementById('currentSens');
+        const currentEDPIEl = document.getElementById('currentEDPI');
         const shotsTakenEl = document.getElementById('shotsTaken');
         const shotsLeftEl = document.getElementById('shotsLeft');
-        const totalTimeEl = document.getElementById('totalTime');
-        const avgReactionEl = document.getElementById('avgReaction');
         const startButton = document.getElementById('startButton');
         const avgOvershootEl = document.getElementById('avgOvershoot');
         const avgUndershootEl = document.getElementById('avgUndershoot');
-        const suggestionEl = document.getElementById('suggestion');
         const resultsModal = document.getElementById('resultsModal');
         const suggestionTextEl = document.getElementById('suggestionText');
-        const modalStatsEl = document.getElementById('modalStats');
+        const recommendedEDPIEl = document.getElementById('recommendedEDPI');
+        const recommendedSensEl = document.getElementById('recommendedSens');
         
         // Reticle positioning variables
         let reticleX = canvas.width / 2;
@@ -396,7 +432,7 @@
                 ctx.fill();
             }
 
-            // Checks if a click (mx, my) hit the target
+            // Checks if a click (mx, my) hit the target (kept for potential visual feedback, but not used for error calculation)
             checkHit(mx, my) {
                 const distance = Math.sqrt((mx - this.x) ** 2 + (my - this.y) ** 2);
                 return distance <= this.radius;
@@ -417,10 +453,8 @@
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
 
-            // Generate a random angle
             const angle = Math.random() * 2 * Math.PI;
 
-            // Calculate x and y coordinates on the circle perimeter
             let x = centerX + FLICK_DISTANCE * Math.cos(angle);
             let y = centerY + FLICK_DISTANCE * Math.sin(angle);
             
@@ -474,17 +508,11 @@
                 target.draw();
             }
             
-            // Update total time display
-            if (isGameRunning && shotsTaken > 0 && shotsTaken < MAX_SHOTS) {
-                const currentTime = (performance.now() - gameStartTime) / 1000;
-                totalTimeEl.textContent = currentTime.toFixed(2);
-            }
-
             gameLoopInterval = requestAnimationFrame(gameLoop);
         }
 
         /**
-         * Handles mouse click on the canvas.
+         * Handles mouse click on the canvas (The fixed core logic).
          */
         function handleFlick(e) {
             if (!isGameRunning || !target) return;
@@ -494,62 +522,42 @@
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
             
-            // 1. Check if the target was hit
-            const hit = target.checkHit(clickX, clickY);
+            // Register the shot attempt regardless of hitting the small target circle
+            shotsTaken++; 
 
-            if (hit) {
-                const endTime = performance.now();
-                const reactionTime = endTime - startTime;
-                reactionTimes.push(reactionTime);
-                
-                shotsTaken++;
+            // 2. Calculate directional error for sensitivity analysis (Overshoot or Undershoot)
+            const startX = canvas.width / 2;
+            const startY = canvas.height / 2;
+            
+            const hitVecX = clickX - startX;
+            const hitVecY = clickY - startY;
+            
+            const targetVecX = target.x - startX;
+            const targetVecY = target.y - startY;
+            
+            // Use the true distance in canvas pixels for FLICK_DISTANCE
+            const targetDist = Math.sqrt(targetVecX ** 2 + targetVecY ** 2); 
 
-                // 2. Calculate error for sensitivity analysis
-                // Vector from center (start point) to hit point
-                const startX = canvas.width / 2;
-                const startY = canvas.height / 2;
-                
-                const hitVecX = clickX - startX;
-                const hitVecY = clickY - startY;
-                const hitDist = Math.sqrt(hitVecX ** 2 + hitVecY ** 2);
-                
-                // Vector from center (start point) to target center
-                const targetVecX = target.x - startX;
-                const targetVecY = target.y - startY;
-                
-                // Project the hit vector onto the target vector to find the directional error
-                const targetDist = FLICK_DISTANCE; // Should be the same as FLICK_DISTANCE
+            // Dot product / magnitude squared for projection
+            const dotProduct = hitVecX * targetVecX + hitVecY * targetVecY;
+            const magnitudeSq = targetVecX ** 2 + targetVecY ** 2;
+            
+            const projectionFactor = dotProduct / magnitudeSq; 
+            const projectedHitDist = projectionFactor * targetDist;
 
-                // Dot product / magnitude squared for normalized projection
-                const dotProduct = hitVecX * targetVecX + hitVecY * targetVecY;
-                const magnitudeSq = targetVecX ** 2 + targetVecY ** 2;
-                
-                // Projection factor 'p' (how far along the target vector the hit landed)
-                const projectionFactor = dotProduct / magnitudeSq; 
-                
-                // The distance of the hit *along* the intended flick line from the start point
-                const projectedHitDist = projectionFactor * targetDist;
-
-                const error = projectedHitDist - targetDist;
-                
-                if (error > 0) {
-                    // Overshoot: The mouse landed beyond the target's center along the flick line
-                    overshootErrors.push(error);
-                } else {
-                    // Undershoot/Perfect hit: The mouse landed before the target's center along the flick line
-                    // We only log undershoot if it's outside the target radius
-                    const errorMagnitude = Math.abs(error);
-                    if (errorMagnitude > TARGET_RADIUS) {
-                        undershootErrors.push(errorMagnitude);
-                    }
-                }
-
-                // 3. Start next round
-                startNewRound();
+            // Error is the distance along the flick line from the target center
+            const error = projectedHitDist - targetDist;
+            
+            if (error > 0) {
+                // Overshoot (past the target center)
+                overshootErrors.push(error);
             } else {
-                // Missed the target (optional: add penalty or ignore, we ignore for a sensitivity test)
-                // console.log("Miss!");
+                // Undershoot (short of the target center)
+                undershootErrors.push(Math.abs(error));
             }
+
+            // 3. Start next round
+            startNewRound();
         }
         
         /**
@@ -562,44 +570,27 @@
         }
 
         /**
-         * Handles mouse movement to control the reticle
+         * Handles mouse/touch movement
          */
-        function handleMouseMove(e) {
+        function handleMovement(clientX, clientY) {
             if (!isGameRunning) return;
             
             const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+            const mouseX = clientX - rect.left;
+            const mouseY = clientY - rect.top;
 
-            // Ensure reticle stays within bounds of the canvas
             reticleX = Math.max(0, Math.min(canvas.width, mouseX));
             reticleY = Math.max(0, Math.min(canvas.height, mouseY));
             
             updateReticlePosition();
         }
 
-        /**
-         * Handles touch movement for the reticle (simulating a mouse)
-         */
-        function handleTouchMove(e) {
-            if (!isGameRunning || e.touches.length !== 1) return;
-            e.preventDefault(); // Prevent scrolling
-            
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const touchX = touch.clientX - rect.left;
-            const touchY = touch.clientY - rect.top;
-
-            // Ensure reticle stays within bounds of the canvas
-            reticleX = Math.max(0, Math.min(canvas.width, touchX));
-            reticleY = Math.max(0, Math.min(canvas.height, touchY));
-            
-            updateReticlePosition();
+        function handleMouseMove(e) { handleMovement(e.clientX, e.clientY); }
+        function handleTouchMove(e) { 
+            if (e.touches.length !== 1) return;
+            e.preventDefault(); 
+            handleMovement(e.touches[0].clientX, e.touches[0].clientY);
         }
-
-        /**
-         * Handles touch end for the click action
-         */
         function handleTouchEnd(e) {
             if (!isGameRunning) return;
             // Simulate a click at the current reticle position
@@ -616,13 +607,6 @@
             shotsTakenEl.textContent = shotsTaken;
             shotsLeftEl.textContent = MAX_SHOTS - shotsTaken;
             
-            if (reactionTimes.length > 0) {
-                const avg = reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length;
-                avgReactionEl.textContent = avg.toFixed(2);
-            } else {
-                avgReactionEl.textContent = 'N/A';
-            }
-            
             const avgOvershoot = overshootErrors.length > 0 
                 ? overshootErrors.reduce((a, b) => a + b, 0) / overshootErrors.length
                 : 0;
@@ -633,24 +617,34 @@
             avgOvershootEl.textContent = avgOvershoot.toFixed(2);
             avgUndershootEl.textContent = avgUndershoot.toFixed(2);
         }
+        
+        /**
+         * Updates current eDPI display based on inputs.
+         */
+        function updateEDPI() {
+            currentDPI = parseFloat(currentDPIEl.value) || 0;
+            currentSens = parseFloat(currentSensEl.value) || 0;
+            currentEDPI = currentDPI * currentSens;
+            currentEDPIEl.textContent = currentEDPI.toFixed(0);
+        }
 
         /**
          * Logic to start the full test.
          */
-        let gameStartTime = 0;
-
         function startGame() {
             if (isGameRunning) return;
+
+            if (currentDPI <= 0 || currentSens <= 0) {
+                alertUser("Please enter valid DPI and In-Game Sensitivity settings before starting the test.");
+                return;
+            }
 
             // Reset all state
             isGameRunning = true;
             shotsTaken = 0;
-            reactionTimes = [];
             overshootErrors = [];
             undershootErrors = [];
             
-            gameStartTime = performance.now();
-
             startButton.textContent = 'IN PROGRESS...';
             startButton.disabled = true;
             resultsModal.style.display = 'none';
@@ -676,7 +670,7 @@
             target = null;
             cancelAnimationFrame(gameLoopInterval);
             reticle.classList.add('hidden');
-
+            
             const avgOvershoot = overshootErrors.length > 0 
                 ? overshootErrors.reduce((a, b) => a + b, 0) / overshootErrors.length
                 : 0;
@@ -684,49 +678,97 @@
                 ? undershootErrors.reduce((a, b) => a + b, 0) / undershootErrors.length
                 : 0;
             
-            const totalAvgError = avgOvershoot + avgUndershoot;
-            const errorThreshold = 10; // Pixels
-
-            let suggestionText;
-            let suggestionLabel;
+            // The net error is the difference in directional control (positive=overshoot, negative=undershoot)
+            const netError = avgOvershoot - avgUndershoot; 
             
-            if (totalAvgError < errorThreshold && reactionTimes.length > 0) {
-                suggestionLabel = "OPTIMAL";
-                suggestionText = `Excellent control! Your average directional error is only ${totalAvgError.toFixed(2)}px. Your current sensitivity appears to be close to optimal for your mouse control style.`;
-            } else if (avgOvershoot > avgUndershoot && avgOvershoot > errorThreshold) {
-                suggestionLabel = "DECREASE SENSITIVITY";
-                suggestionText = `You consistently ${avgOvershoot.toFixed(2)}px past the target center. This suggests your sensitivity is too high. Try lowering your in-game sensitivity by 5-10% and run the test again.`;
-            } else if (avgUndershoot > avgOvershoot && avgUndershoot > errorThreshold) {
-                suggestionLabel = "INCREASE SENSITIVITY";
-                suggestionText = `You consistently fell short of the target center by ${avgUndershoot.toFixed(2)}px. This suggests your sensitivity is too low. Try raising your in-game sensitivity by 5-10% and run the test again.`;
+            // Use a higher threshold for a definitive change recommendation
+            const significantErrorThreshold = 15; // Pixels
+            
+            let suggestionText, recommendationLabel, newEDPI, newSens;
+
+            if (Math.abs(netError) < significantErrorThreshold) {
+                // Error is small and balanced (or zero)
+                recommendationLabel = "Optimal (Minor Adjustment)";
+                newEDPI = currentEDPI;
+                newSens = currentSens;
+
+                suggestionText = `
+                    <p style="color: var(--primary-color);"><strong>EXCELLENT CONTROL!</strong></p>
+                    <p>Your flick accuracy is very balanced (Net Error: ${netError.toFixed(2)}px). Your current eDPI of ${currentEDPI.toFixed(0)} is highly effective for your control style.</p>
+                    <p>You are in the optimal range. Focus now on improving consistency and speed rather than changing your sensitivity.</p>
+                `;
+
             } else {
-                 suggestionLabel = "CONSISTENT FLICK (GOOD)";
-                 suggestionText = `Your directional error is balanced but high. This may indicate a slight inconsistency in your flick speed. Your sensitivity is likely close, but practice focusing on stopping power.`;
+                // Calculate the required adjustment factor based on the error ratio relative to the flick distance
+                // E.g., if netError is 10px (overshoot) on a 200px flick, the ratio is 0.05. We need 5% less sens.
+                const errorRatio = netError / FLICK_DISTANCE;
+                
+                // Adjustment Factor: 1 - errorRatio. (If ratio is 0.05, factor is 0.95 (decrease by 5%))
+                const adjustmentFactor = 1 - errorRatio;
+                
+                // Calculate the new recommended eDPI and sensitivity
+                newEDPI = currentEDPI * adjustmentFactor;
+                newSens = newEDPI / currentDPI;
+
+                if (netError > 0) {
+                    recommendationLabel = "DECREASE SENSITIVITY";
+                    suggestionText = `
+                        <p style="color: var(--accent-color);"><strong>DECREASE RECOMMENDED.</strong></p>
+                        <p>You are consistently **overshooting** the target by an average of ${avgOvershoot.toFixed(2)}px. This suggests your current sensitivity is too high, making it hard to stop your mouse precisely.</p>
+                        <p>The calculation suggests a reduction of approximately ${Math.abs(errorRatio * 100).toFixed(1)}% to correct for this overshoot.</p>
+                    `;
+                } else {
+                    recommendationLabel = "INCREASE SENSITIVITY";
+                    suggestionText = `
+                        <p style="color: var(--primary-color);"><strong>INCREASE RECOMMENDED.</strong></p>
+                        <p>You are consistently **undershooting** the target by an average of ${avgUndershoot.toFixed(2)}px. This suggests your current sensitivity is too low, making it difficult to reach the target in time without major arm movement.</p>
+                        <p>The calculation suggests an increase of approximately ${Math.abs(errorRatio * 100).toFixed(1)}% to correct for this undershoot.</p>
+                    `;
+                }
             }
 
-            suggestionEl.textContent = suggestionLabel;
+            // Update Recommendation UI
+            recommendedEDPIEl.textContent = `${newEDPI.toFixed(0)}`;
+            recommendedSensEl.textContent = `${newSens.toFixed(3)}`;
+            suggestionTextEl.innerHTML = `<p><strong>Analysis Summary: ${recommendationLabel}</strong></p>` + suggestionText;
             
             // Show modal
-            const totalTime = (performance.now() - gameStartTime) / 1000;
-            const avgTime = reactionTimes.length > 0 ? reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length : 0;
-            
-            modalStatsEl.innerHTML = `
-                <p><strong>Total Time:</strong> ${totalTime.toFixed(2)} s</p>
-                <p><strong>Average Reaction Time:</strong> ${avgTime.toFixed(2)} ms</p>
-            `;
-
-            suggestionTextEl.innerHTML = `<strong>Sensitivity Suggestion: ${suggestionLabel}</strong><br>${suggestionText}`;
             resultsModal.style.display = 'flex';
             startButton.textContent = 'RESTART TEST';
             startButton.disabled = false;
         }
         
         /**
+         * Displays a custom alert box (since standard alert() is forbidden)
+         */
+        function alertUser(message) {
+            const modalTitle = resultsModal.querySelector('h3');
+            const modalContent = resultsModal.querySelector('.modal-content');
+            
+            // Temporarily update modal content for alert
+            modalTitle.textContent = "Error: Input Required";
+            suggestionTextEl.innerHTML = `<p style="color: var(--accent-color);">${message}</p>`;
+            recommendedEDPIEl.textContent = `---`;
+            recommendedSensEl.textContent = `---`;
+            
+            resultsModal.style.display = 'flex';
+            modalContent.classList.add('alert-state');
+            startButton.disabled = false;
+            startButton.textContent = 'START CALIBRATION (15 Shots)';
+        }
+
+        /**
          * Resets and closes the results modal.
          */
         function closeModal() {
             resultsModal.style.display = 'none';
-            // Optional: reset stats display if needed, but 'RESTART TEST' will do it
+            // Clear stats on screen
+            shotsTaken = 0;
+            shotsLeftEl.textContent = MAX_SHOTS;
+            avgOvershootEl.textContent = '0.00';
+            avgUndershootEl.textContent = '0.00';
+            // Ensure inputs are reflected
+            updateEDPI();
         }
 
         /**
@@ -736,8 +778,9 @@
             // Make canvas responsive by resizing and re-centering
             function resizeCanvas() {
                 const containerWidth = canvas.parentElement.clientWidth;
-                const newWidth = Math.min(700, containerWidth);
-                const newHeight = Math.min(500, Math.max(300, containerWidth * (500/700)));
+                // Base width is 700, base height is 500. Aspect ratio is 7:5
+                const newWidth = Math.min(700, containerWidth); 
+                const newHeight = newWidth * (5 / 7);
                 
                 canvas.width = newWidth;
                 canvas.height = newHeight;
@@ -747,9 +790,10 @@
                 reticleY = canvas.height / 2;
                 updateReticlePosition();
 
-                // Restart drawing loop if running
-                if (isGameRunning && target) {
-                    target = new Target(target.x * (newWidth / 700), target.y * (newHeight / 500), TARGET_RADIUS);
+                // Restart drawing loop if running (to fix scaling)
+                if (gameLoopInterval) {
+                     cancelAnimationFrame(gameLoopInterval);
+                     gameLoopInterval = requestAnimationFrame(gameLoop);
                 }
             }
             
@@ -763,9 +807,13 @@
             // Touch handlers for mobile
             canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
             canvas.addEventListener('touchend', handleTouchEnd);
+            
+            // Input listeners
+            currentDPIEl.addEventListener('input', updateEDPI);
+            currentSensEl.addEventListener('input', updateEDPI);
 
             // Initial UI setup
-            shotsLeftEl.textContent = MAX_SHOTS;
+            updateEDPI(); // Calculate initial eDPI
             
             // Run initial draw to set background
             gameLoop();
